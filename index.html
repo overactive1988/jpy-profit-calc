@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>日圓匯率利潤計算器</title>
-  
   <style>
-  
     a {
       color: #1a73e8;
       text-decoration: none;
@@ -46,67 +44,106 @@
       display: none;
       padding: 10px 0;
     }
-
-  .section.active .section-content { display: block; }
-
+    .section.active .section-content { display: block; }
+    #calculateAllBtn {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      z-index: 999;
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #resultArea {
+      position: sticky;
+      top: 20px;
+      float: right;
+      width: 45%;
+      border: 1px solid #ccc;
+      padding: 20px;
+      margin-top: 30px;
+      background: #fafafa;
+    }
+    .left-section {
+      width: 50%;
+      float: left;
+    }
+    .profit-positive {
+      font-weight: bold;
+      color: green;
+    }
+    .profit-negative {
+      font-weight: bold;
+      color: red;
+    }
+    .clearfix::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
   </style>
 </head>
+<body>
+  <div style="max-width: 1200px; margin: auto;" class="clearfix">
+    <p style="text-align:center; font-size:14px;">
+      🔗 <a href="https://rate.bot.com.tw/xrt?Lang=zh-TW" target="_blank">台灣銀行匯率</a> ｜
+      <a href="https://www.esunbank.com/zh-tw/personal/deposit/rate/forex/foreign-exchange-rates" target="_blank">玉山銀行匯率</a>
+    </p>
 
-  <div style="max-width: 1200px; margin: auto;">
-  
+    <div class="left-section">
+      <div class="section" id="section1">
+        <h2 onclick="toggleSection('section1')">商品代購</h2>
+        <div class="section-content">
+          <label for="jpyAmount">商品價格（日幣）：</label>
+          <input type="text" id="jpyAmount" placeholder="例如：10000">
 
-  <p style="text-align:center; font-size:14px;">
-    🔗 <a href="https://rate.bot.com.tw/xrt?Lang=zh-TW" target="_blank">台灣銀行匯率</a> ｜
-    <a href="https://www.esunbank.com/zh-tw/personal/deposit/rate/forex/foreign-exchange-rates" target="_blank">玉山銀行匯率</a>
-  </p>
+          <label for="rateSell">實際匯率（自動取得）：</label>
+          <input type="text" id="rateSell" placeholder="取得中..." readonly>
 
-  <div class="section" id="section1">
-    <h2 onclick="toggleSection('section1')">商品代購</h2>
-    <div class="section-content">
-      <label for="jpyAmount">商品價格（日幣）：</label>
-      <input type="text" id="jpyAmount" placeholder="例如：10000">
+          <label for="rateAdjust">匯率微調（±0.0001～±0.01）：</label>
+          <input type="number" step="0.0001" id="rateAdjust" placeholder="例如：-0.002" oninput="updateAdjustedRate()">
 
-      <label for="rateSell">實際匯率（自動取得）：</label>
-      <input type="text" id="rateSell" placeholder="取得中..." readonly>
+          <label for="adjustedRate">調整後匯率（自動套用）：</label>
+          <input type="text" id="adjustedRate" readonly>
 
-      <label for="rateAdjust">匯率微調（±0.0001～±0.01）：</label>
-      <input type="number" step="0.0001" id="rateAdjust" placeholder="例如：-0.002" oninput="updateAdjustedRate()">
+          <label for="rateCharge">收取日幣匯率：</label>
+          <input type="text" id="rateCharge" placeholder="例如：0.27">
+        </div>
+      </div>
 
-      <label for="adjustedRate">調整後匯率（自動套用）：</label>
-      <input type="text" id="adjustedRate" readonly>
+      <div class="section" id="section2">
+        <h2 onclick="toggleSection('section2')">賣出台幣</h2>
+        <div class="section-content">
+          <label for="bankBuy">銀行買入匯率：</label>
+          <input type="text" id="bankBuy" placeholder="例如：0.2052" oninput="updateTwdSellRate()">
 
-      <label for="rateCharge">收取日幣匯率：</label>
-      <input type="text" id="rateCharge" placeholder="例如：0.27">
+          <label for="bankSell">銀行賣出匯率：</label>
+          <input type="text" id="bankSell" placeholder="例如：0.2102" oninput="updateTwdSellRate()">
 
-      <button onclick="calculateProfit()">計算利潤</button>
+          <label for="sellAdjust">匯率微調（±）：</label>
+          <input type="number" step="0.0001" id="sellAdjust" placeholder="例如：0.001" oninput="updateTwdSellRate()">
+
+          <label for="twdToSell">賣出台幣時報價匯率：</label>
+          <input type="text" id="twdToSell" readonly>
+
+          <label for="twdAmount">賣出台幣金額（TWD）：</label>
+          <input type="text" id="twdAmount" placeholder="例如：10000">
+
+          <label for="costRateSell">你取得台幣時的匯率（日幣對台幣）：</label>
+          <input type="text" id="costRateSell" placeholder="例如：0.27">
+
+          <label for="note">📌 備註：可手動輸入銀行買入與賣出價，並進行微調</label>
+        </div>
+      </div>
     </div>
+
+    <div class="result" id="resultArea" style="display:none;"></div>
+    <button id="calculateAllBtn" onclick="handleCombinedCalculation()">📊 計算利潤</button>
   </div>
-
-  <div class="section" id="section2">
-    <h2 onclick="toggleSection('section2')">賣出台幣</h2>
-    <div class="section-content">
-      <label for="bankBuy">銀行買入匯率：</label>
-      <input type="text" id="bankBuy" placeholder="例如：0.2052" oninput="updateTwdSellRate()">
-
-      <label for="bankSell">銀行賣出匯率：</label>
-      <input type="text" id="bankSell" placeholder="例如：0.2102" oninput="updateTwdSellRate()">
-
-      <label for="sellAdjust">匯率微調（±）：</label>
-      <input type="number" step="0.0001" id="sellAdjust" placeholder="例如：0.001" oninput="updateTwdSellRate()">
-
-      <label for="twdToSell">賣出台幣時報價匯率：</label>
-      <input type="text" id="twdToSell" readonly>
-
-      <label for="twdAmount">賣出台幣金額（TWD）：</label>
-      <input type="text" id="twdAmount" placeholder="例如：10000">
-
-      <label for="note">📌 備註：可手動輸入銀行買入與賣出價，並進行微調</label>
-
-      <button onclick="calculateSellJPY()">計算賣出台幣獲得多少日圓</button>
-    </div>
-  </div>
-
-  <div class="result" id="result"></div>
 
   <script>
     let rate = 0;
@@ -146,67 +183,52 @@
       }
     }
 
-    function formatTWD(amount) {
-      return Math.round(amount) + ' TWD';
-    }
-
-    function calculateProfit() {
-      const jpy = parseFloat(document.getElementById("jpyAmount").value);
-      const costRate = parseFloat(document.getElementById("adjustedRate").value);
-      const chargeRate = parseFloat(document.getElementById("rateCharge").value);
-
-      if (isNaN(jpy) || isNaN(chargeRate) || isNaN(costRate)) {
-        document.getElementById("result").innerText = "請正確輸入所有欄位。";
-        return;
-      }
-
-      const cost = jpy * costRate;
-      const charge = jpy * chargeRate;
-      const profit = charge - cost;
-      const margin = cost > 0 ? (profit / cost * 100) : 0;
-
-      document.getElementById("result").innerHTML = `
-        <strong>實際匯率（含微調）：</strong> ${costRate.toFixed(4)}<br>
-        <strong>成本：</strong> ${formatTWD(cost)}<br>
-        <strong>收入：</strong> ${formatTWD(charge)}<br>
-        <strong>利潤：</strong> ${formatTWD(profit)}<br>
-        <strong>利潤率：</strong> ${margin.toFixed(2)}%<br>
-        <small style="color:gray;">資料來源：open.er-api.com</small>
-      `;
-    }
-
-    function calculateSellJPY() {
-      const costRate = 0.27;
-      const jpyPerTwdCost = 1 / costRate;
-
-      const sellRate = parseFloat(document.getElementById("twdToSell").value);
-      const twdAmount = parseFloat(document.getElementById("twdAmount").value);
-
-      if (isNaN(sellRate) || isNaN(twdAmount)) {
-        document.getElementById("result").innerText = "請輸入台幣金額與報價匯率。";
-        return;
-      }
-
-      const jpyReceived = twdAmount / sellRate;
-      const costJPY = twdAmount * jpyPerTwdCost;
-      const profitJPY = jpyReceived - costJPY;
-
-      document.getElementById("result").innerHTML = `
-        <strong>你收到：</strong> ${jpyReceived.toFixed(0)} JPY<br>
-        <strong>成本：</strong> ${costJPY.toFixed(0)} JPY<br>
-        <strong>利潤：</strong> ${profitJPY.toFixed(0)} JPY<br>
-        <strong>每台幣成本：</strong> ${jpyPerTwdCost.toFixed(4)} JPY<br>
-        <strong>你報價的每台幣換回：</strong> ${(1 / sellRate).toFixed(4)} JPY
-      `;
-    }
-
     function toggleSection(id) {
       const section = document.getElementById(id);
       section.classList.toggle("active");
     }
 
+    function handleCombinedCalculation() {
+      document.getElementById("resultArea").style.display = "block";
+
+      const jpy = parseFloat(document.getElementById("jpyAmount").value);
+      const costRate = parseFloat(document.getElementById("adjustedRate").value);
+      const chargeRate = parseFloat(document.getElementById("rateCharge").value);
+      const sellRate = parseFloat(document.getElementById("twdToSell").value);
+      const twdAmount = parseFloat(document.getElementById("twdAmount").value);
+      const costRateSell = parseFloat(document.getElementById("costRateSell").value) || 0.27;
+      const jpyPerTwdCost = 1 / costRateSell;
+
+      let html = "<h3>📦 商品代購</h3>";
+      if (!isNaN(jpy) && !isNaN(costRate) && !isNaN(chargeRate)) {
+        const cost = jpy * costRate;
+        const charge = jpy * chargeRate;
+        const profit = charge - cost;
+        const margin = cost > 0 ? (profit / cost * 100) : 0;
+        const profitClass = profit >= 0 ? "profit-positive" : "profit-negative";
+        html += `實際匯率（含微調）： ${costRate.toFixed(4)}<br>` +
+                `成本： ${Math.round(cost)} TWD<br>` +
+                `收入： ${Math.round(charge)} TWD<br>` +
+                `<span class="${profitClass}">利潤： ${Math.round(profit)} TWD</span><br>` +
+                `利潤率： ${margin.toFixed(2)}%<br><hr>`;
+      }
+
+      html += "<h3>💰 賣出台幣</h3>";
+      if (!isNaN(sellRate) && !isNaN(twdAmount) && !isNaN(jpyPerTwdCost)) {
+        const jpyReceived = twdAmount / sellRate;
+        const costJPY = twdAmount * jpyPerTwdCost;
+        const profitJPY = jpyReceived - costJPY;
+        const profitClass = profitJPY >= 0 ? "profit-positive" : "profit-negative";
+        html += `你收到： ${Math.round(jpyReceived)} JPY<br>` +
+                `成本： ${Math.round(costJPY)} JPY<br>` +
+                `<span class="${profitClass}">利潤： ${Math.round(profitJPY)} JPY</span><br>` +
+                `每台幣成本： ${jpyPerTwdCost.toFixed(4)} JPY<br>` +
+                `你報價的每台幣換回： ${(1 / sellRate).toFixed(4)} JPY`;
+      }
+      document.getElementById("resultArea").innerHTML = html;
+    }
+
     fetchExchangeRateHost();
   </script>
-  </div>
-
+</body>
 </html>
