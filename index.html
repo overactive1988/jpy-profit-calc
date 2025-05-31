@@ -45,7 +45,7 @@
   <label for="rateSell">實際匯率（自動取得）：</label>
   <input type="text" id="rateSell" placeholder="取得中..." readonly>
 
-  <label for="rateCharge">你向朋友收的匯率：</label>
+  <label for="rateCharge">收取匯率：</label>
   <input type="number" step="0.0001" id="rateCharge" placeholder="例如：0.27">
 
   <button onclick="calculateProfit()">計算利潤</button>
@@ -57,11 +57,11 @@
 
     async function fetchExchangeRateHost() {
       try {
-        const response = await fetch('https://api.exchangerate.host/convert?from=JPY&to=TWD');
+        const response = await fetch('https://open.er-api.com/v6/latest/JPY');
         if (!response.ok) throw new Error('API 錯誤');
         const data = await response.json();
-        if (!data || !data.result) throw new Error('資料格式錯誤');
-        rate = data.result;
+        if (!data || !data.rates || !data.rates.TWD) throw new Error('資料格式錯誤');
+        rate = data.rates.TWD;
         document.getElementById("rateSell").value = rate.toFixed(4);
       } catch (e) {
         console.error('取得匯率失敗:', e);
@@ -90,7 +90,8 @@
         <strong>成本：</strong> ${cost.toFixed(2)} TWD<br>
         <strong>收入：</strong> ${charge.toFixed(2)} TWD<br>
         <strong>利潤：</strong> ${profit.toFixed(2)} TWD<br>
-        <strong>利潤率：</strong> ${margin.toFixed(2)}%
+        <strong>利潤率：</strong> ${margin.toFixed(2)}%<br>
+        <small style="color:gray;">資料來源：open.er-api.com（免費市場即時匯率）</small>
       `;
     }
 
